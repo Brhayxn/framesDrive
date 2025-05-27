@@ -1,5 +1,6 @@
 import pandas as pd
 import requests
+import sqlite3
 
 # ID del archivo
 sheet_id = "1PRtkDUT7vzmcXgVwPEW0oOPkUQTdLddb3_cDo-qkSJY"
@@ -13,6 +14,19 @@ with open("hoja.xlsx", "wb") as f:
     f.write(response.content)
 #dataframe a trabajar
 df = pd.read_excel("./hoja.xlsx")
+
+# Conectar a la base de datos (se crea si no existe)
+conn = sqlite3.connect("personas.db")
+cursor = conn.cursor()
+
+# Crear tabla si no existe
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS personas (
+    rut INTEGER PRIMARY KEY,
+    nombre TEXT,
+    edad INTEGER
+)
+""")
 
 
 
@@ -71,6 +85,17 @@ def deletePerson(rut):
         df = df[df["rut"] != rut]
         print(f"\nPersona con RUT {rut} eliminada correctamente")
 
+def dataMigration():
+    for _, row in df.iterrows():
+        cursor.execute("""
+        INSERT OR REPLACE INTO personas (rut, nombre, edad)
+        VALUES (?, ?, ?)
+        """, (row['rut'], row['nombre'], row['edad']))
+
+    # Guardar cambios y cerrar
+    conn.commit()
+    conn.close()
+
 # Menú CRUD
 def menu():
     while True:
@@ -80,6 +105,7 @@ def menu():
         print("3. Editar edad de una persona")
         print("4. Agregar nueva persona")
         print("5. Eliminar persona por RUT")
+        print("6. Migrar datos")
         print("6. Salir")
         
         opcion = input("Selecciona una opción: ")
@@ -139,8 +165,13 @@ def menu():
                 deletePerson(rut)
             except ValueError:
                 print("\nPor favor ingresa un RUT válido.")
-
+        
         elif opcion == "6":
+            dataMigration()
+            print("\nDatos migrados correctamente a la base de datos\n")
+
+
+        elif opcion == "7":
             print("Saliendo del programa...")
             break
         
