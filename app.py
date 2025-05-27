@@ -70,9 +70,9 @@ def editPerson(rut, nuevo_nombre=None, nueva_edad=None):
         print("\nNo se realizaron cambios.")
 
 # Función para agregar una persona
-def addPerson(rut, nombre, apellido, edad):
+def addPerson(rut, nombre, edad):
     global df
-    new_row = {"rut": rut, "nombre": nombre, "apellido": apellido, "edad": edad}
+    new_row = {"rut": rut, "nombre": nombre, "edad": edad}
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     print(f"\nPersona con RUT {rut} agregada correctamente")
 
@@ -96,6 +96,9 @@ def dataMigration():
     conn.commit()
     conn.close()
 
+def saveDF():
+    df.to_excel("hoja.xlsx", index=False, engine="openpyxl")
+
 # Menú CRUD
 def menu():
     while True:
@@ -106,7 +109,8 @@ def menu():
         print("4. Agregar nueva persona")
         print("5. Eliminar persona por RUT")
         print("6. Migrar datos")
-        print("6. Salir")
+        print("7. Guardar xlsx")
+        print("8. Salir")
         
         opcion = input("Selecciona una opción: ")
 
@@ -153,9 +157,8 @@ def menu():
             try:
                 rut = int(input("RUT: "))
                 nombre = input("Nombre: ")
-                apellido = input("Apellido: ")
                 edad = int(input("Edad: "))
-                addPerson(rut, nombre, apellido, edad)
+                addPerson(rut, nombre, edad)
             except ValueError:
                 print("\nPor favor ingresa valores válidos.")
 
@@ -169,11 +172,16 @@ def menu():
         elif opcion == "6":
             dataMigration()
             print("\nDatos migrados correctamente a la base de datos\n")
-
-
+            
         elif opcion == "7":
+            saveDF()
+            print("\nDatos respaldados en 'hoja.xlsx'.\n")
+
+
+        elif opcion == "8":
             print("Saliendo del programa...")
             break
+
         
         else:
             print("Opción no válida. Inténtalo de nuevo.")
